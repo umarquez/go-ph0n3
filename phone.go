@@ -124,15 +124,20 @@ type Ph0n3Options struct {
 	Channel int
 	// BuffSizeBytes is the buffer size in bytes
 	BuffSizeBytes int
+	// Vervose enables debug messages (the number that is been dialed)
+	Vervose bool
 }
 
 // DefaultPh0n3Options the default values.
 var DefaultPh0n3Options = &Ph0n3Options{
 	SpaceDuration:    time.Second / 15,
-	DialToneDuration: 0,
+	DialToneDuration: 2,
 	ToneDuration:     time.Second / 4,
 	BuffSizeBytes:    4096,
 	Channel:          1,
+	RingingToneTimes: 2,
+	BusyToneTimes:    4,
+	Vervose:          false,
 }
 
 // Ph0n3Key are keys of the DMTF System
@@ -264,7 +269,7 @@ func (phone *Ph0n3) play(freq float64, duration time.Duration, wg *sync.WaitGrou
 
 func (phone *Ph0n3) dialing() {
 	if phone.opt.RingingToneTimes > 0 {
-		for i := 0; i < 3; i++ {
+		for i := 0; i < phone.opt.RingingToneTimes; i++ {
 			wg := new(sync.WaitGroup)
 			wg.Add(2)
 			go phone.play(480, time.Second*2, wg)
@@ -278,7 +283,7 @@ func (phone *Ph0n3) dialing() {
 }
 
 func (phone *Ph0n3) endingCall() {
-	if phone.opt.BusyToneTimes < 0 {
+	if phone.opt.BusyToneTimes > 0 {
 		if phone.dialed == strings.Repeat("5", 5) {
 			var f, t float64
 			for i, v := range []float64{0.055, 233.8, 4, 311.13, 2, 369.99, 4, 415.3,
@@ -379,7 +384,9 @@ func (phone *Ph0n3) Dial(keys ...Ph0n3Key) error {
 			return errors.New("value out of range")
 		}
 
-		fmt.Printf("%v", phone.dialed[len(phone.dialed)-1])
+		if phone.opt.Vervose {
+			fmt.Printf("%v", phone.dialed[len(phone.dialed)-1:])
+		}
 
 		wg = new(sync.WaitGroup)
 		wg.Add(2)
