@@ -1,10 +1,14 @@
-// Based on Oto's example wich is licensed under the Apache License
-// Version 2.0.
-// https://github.com/hajimehoshi/oto/blob/master/example/main.go
+/*
+go_ph0n3 is a virtual DTMF phone dialing simulator / tones generator it is
+uses Oto as sound lib and is based on Oto's example wich is licensed under the
+Apache License Version 2.0.
+https://github.com/hajimehoshi/oto/blob/master/example/main.go
+*/
 package go_ph0n3
 
 import (
 	"errors"
+	"fmt"
 	"github.com/hajimehoshi/oto"
 	"io"
 	"log"
@@ -19,7 +23,6 @@ const (
 	bitDepthInBytes = 2
 )
 
-// ============================================================================
 // sineWave Because we need to play a sound...
 // This is like a "single wave synth"
 type sineWave struct {
@@ -103,7 +106,6 @@ func (s *sineWave) Read(buf []byte) (int, error) {
 	return n, nil
 }
 
-// ============================================================================
 // Ph0n3Options Defines the behavior of a Ph0n3 instance.
 type Ph0n3Options struct {
 	// SpaceDuration Time between tones
@@ -133,10 +135,10 @@ var DefaultPh0n3Options = &Ph0n3Options{
 	Channel:          1,
 }
 
-// ============================================================================
+// Ph0n3Key are keys of the DMTF System
 type Ph0n3Key int
 
-// This consts will gonna be safe indexs, we are just ensuring that only
+// This constants will gonna be safe indexes, we are just ensuring that only
 // defined value will be used; tit is based on the standard 16 key names of the
 // DTMF (Dual-Tone Multi-Frequency) System.
 // https://en.wikipedia.org/wiki/Dual-tone_multi-frequency_signaling
@@ -159,7 +161,7 @@ const (
 	KeyD
 )
 
-// StandarPad Is a map of the standard phone keys and its values to the DTMF
+// StandarPad is a map of the standard phone keys and its values to the DTMF
 // key that it belongs. This allows you to dial numbers like: 01-800-SOMETHING.
 var StandarPad = map[string]Ph0n3Key{
 	"1": Key1,
@@ -206,8 +208,7 @@ var fqMapCols = []float64{1209, 1336, 1477, 1633}
 // Low freqs map
 var fqMapRows = []float64{697, 770, 852, 941}
 
-// ============================================================================
-// Ph0n3 Is a phone toy you can use to dial a number; it also could be used as
+// Ph0n3 is a phone toy you can use to dial a number; it also could be used as
 // dialing tone generator.
 type Ph0n3 struct {
 	opt           *Ph0n3Options
@@ -218,7 +219,7 @@ type Ph0n3 struct {
 	Close         chan bool
 }
 
-// NewPh0n3 Returns a new phone instance ready to use
+// NewPh0n3 returns a new phone instance ready to use
 func NewPh0n3(opt *Ph0n3Options) *Ph0n3 {
 	p := new(Ph0n3)
 	p.Close = make(chan bool, 1)
@@ -240,7 +241,7 @@ func NewPh0n3(opt *Ph0n3Options) *Ph0n3 {
 	return p
 }
 
-// Plays The a sin wave with frequency of <freq> during <duration> time, then
+// Plays a sin wave with frequency of <freq> during <duration> time, then
 // wg.Done()on <wg> wait group.
 func (phone *Ph0n3) play(freq float64, duration time.Duration, wg *sync.WaitGroup) {
 	defer func() {
@@ -307,7 +308,7 @@ func (phone *Ph0n3) endingCall() {
 	phone.Close <- true
 }
 
-// Open Opens the line with a dial tone
+// Open opens the line with a dial tone
 func (phone *Ph0n3) Open() *Ph0n3 {
 	if phone.isOpen {
 		return phone
@@ -335,7 +336,7 @@ func (phone *Ph0n3) Open() *Ph0n3 {
 	return phone
 }
 
-// Dial Dials a key sequence
+// Dial dials a key sequence
 func (phone *Ph0n3) Dial(keys ...Ph0n3Key) error {
 	defer func() {
 		phone.lastEventTime = time.Now()
@@ -378,6 +379,8 @@ func (phone *Ph0n3) Dial(keys ...Ph0n3Key) error {
 			return errors.New("value out of range")
 		}
 
+		fmt.Printf("%v", phone.dialed[len(phone.dialed)-1])
+
 		wg = new(sync.WaitGroup)
 		wg.Add(2)
 		go phone.play(fqMapCols[col], phone.opt.ToneDuration, wg)
@@ -388,7 +391,7 @@ func (phone *Ph0n3) Dial(keys ...Ph0n3Key) error {
 	return nil
 }
 
-// DialString Dial keys from the given strings, if a char does not exists it
+// DialString dial keys from the given strings, if a char does not exists it
 // skips and continue with next.
 func (phone *Ph0n3) DialString(text string) error {
 	for _, char := range text {
