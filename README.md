@@ -1,5 +1,6 @@
 # go-ph0n3
 Virtual DTMF phone dialing simulator / tones generator
+it is uses [Oto lib](https://github.com/hajimehoshi/oto) (by [Hajime Hoshi](https://star.one/)) as sound lib and is based on [Oto's example](https://github.com/hajimehoshi/oto/blob/master/example/main.go) which is licensed under the Apache License Version 2.0.
 
 ## Example:
 
