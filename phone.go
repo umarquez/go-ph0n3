@@ -336,6 +336,7 @@ func (phone *Ph0n3) Open() *Ph0n3 {
 			time.Sleep(time.Second / 2)
 		}
 
+		fmt.Print("\n")
 		phone.dialing()
 	}()
 	return phone
